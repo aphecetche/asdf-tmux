@@ -1,5 +1,5 @@
-language: cpp
-script: asdf plugin-test tmux https://github.com/aphecetche/asdf-tmux.git
+language: c
+script: asdf plugin-test tmux https://github.com/aphecetche/asdf-tmux.git 'tmux -V'
 before_script:
   - git clone https://github.com/asdf-vm/asdf.git
   - . asdf/asdf.sh
