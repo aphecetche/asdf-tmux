@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+install_tmux() {
+  local version=$1
+  local install_path=$2
+  local concurrency=$3
+
+  if [ "$TMPDIR" = "" ]; then
+    local tmp_download_dir=$(mktemp -d -t tmux_build_XXXXXX)
+  else
+    local tmp_download_dir=$TMPDIR
+  fi
+
+   # path to the tar file
+  local source_path=$(get_download_file_path $version $tmp_download_dir)
+  echo $source_path
+  download_source_file $version $source_path
+
+  # running this in subshell
+  # we don't want to disturb current working dir
+  (
+    if ! type "unzip" &> /dev/null; then
+      echo "ERROR: unzip not found"
+      exit 1
+    fi
+
+    unzip -q $source_path -d $tmp_download_dir || exit 1
+
+     cd $tmp_download_dir/tmux-${version}
+     ./autogen.sh
+     ./configure --prefix=$install_path
+     make -j $concurrency
+     if [[ $? -eq 0 ]]; then
+       make install
+     fi
+  )
+}
+
+# install_deps() {
+# }
+
+download_source_file() {
+  local version=$1
+  local download_path=$2
+  local download_url=$(get_download_url $version)
+
+  curl -Lo $download_path -C - $download_url
+}
+
+
+get_download_file_path() {
+  local version=$1
+  local tmp_download_dir=$2
+
+  echo "$tmp_download_dir/tmux-${version}.zip"
+}
+
+get_download_url() {
+  local version=$1
+
+  echo "https://github.com/tmux/tmux/archive/${version}.zip"
+}
+
+install_tmux $ASDF_INSTALL_VERSION $ASDF_INSTALL_PATH $ASDF_CONCURRENCY
