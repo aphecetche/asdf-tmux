@@ -28,7 +28,7 @@ install_tmux() {
 
      cd $tmp_download_dir/tmux-${version}
      ./autogen.sh
-     ./configure --prefix=$install_path
+     ./configure --prefix=$install_path CFLAGS="-I$install_path/include" LDFLAGS="-L$install_path/lib"
      make -j $concurrency
      if [[ $? -eq 0 ]]; then
        make install
@@ -36,8 +36,23 @@ install_tmux() {
   )
 }
 
-# install_deps() {
-# }
+install_deps() {
+  if [ "$TMPDIR" = "" ]; then
+    local tmp_download_dir=$(mktemp -d -t tmux_build_XXXXXX)
+  else
+    local tmp_download_dir=$TMPDIR
+  fi
+  cd $tmp_download_dir
+
+  libevent_version="2.1.10"
+
+  curl -LO https://github.com/libevent/libevent/releases/download/release-${libevent_version}-stable/libevent-${libevent_version}-stable.tar.gz
+  tar -zvxf libevent-${libevent_version}-stable.tar.gz
+  cd libevent-${libevent_version}-stable
+  ./autogen.sh
+  ./configure --prefix=$install_path
+  make -j $concurrency install
+}
 
 download_source_file() {
   local version=$1
@@ -60,5 +75,7 @@ get_download_url() {
 
   echo "https://github.com/tmux/tmux/archive/${version}.zip"
 }
+
+install_deps
 
 install_tmux $ASDF_INSTALL_VERSION $ASDF_INSTALL_PATH $ASDF_CONCURRENCY
