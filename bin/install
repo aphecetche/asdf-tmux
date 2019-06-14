@@ -29,7 +29,7 @@ install_tmux() {
     cd $tmp_download_dir/tmux-${version}
     ./autogen.sh
     install_path=$install_path
-    ./configure --prefix=$install_path CFLAGS="-I${install_path}/include" LDFLAGS="-L${install_path}/lib"
+    ./configure --prefix=$install_path CFLAGS="-I${install_path}/include" LDFLAGS="-L${install_path}/lib -Wl,-rpath,$install_path/lib"
     make -j $concurrency
     if [[ $? -eq 0 ]]; then
       make install
