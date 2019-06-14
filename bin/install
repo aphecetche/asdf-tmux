@@ -28,8 +28,8 @@ install_tmux() {
 
     cd $tmp_download_dir/tmux-${version}
     ./autogen.sh
-    TMUXTARGET=$install_path
-    ./configure --prefix=$TMUXTARGET CFLAGS="-I${TMUXTARGET}/include -I${TMUXTARGET}/include/ncurses" LDFLAGS="-L${TMUXTARGET}/lib -L${TMUXTARGET}/include -L${TMUXTARGET}/include/ncurses"
+    install_path=$install_path
+    ./configure --prefix=$install_path CFLAGS="-I${install_path}/include" LDFLAGS="-L${install_path}/lib"
     make -j $concurrency
     if [[ $? -eq 0 ]]; then
       make install
@@ -62,31 +62,6 @@ install_libevent() {
   fi
 }
 
-install_ncurses() {
-  local install_path=$1
-  local concurrency=$2
-
-  if [ "$TMPDIR" = "" ]; then
-    local tmp_download_dir=$(mktemp -d -t tmux_build_XXXXXX)
-  else
-    local tmp_download_dir=$TMPDIR
-  fi
-  cd $tmp_download_dir
-
-  ncurses_version="6.1"
-
-  curl -LO ftp://ftp.gnu.org/gnu/ncurses/ncurses-${ncurses_version}.tar.gz
-  tar -zxf ncurses-${ncurses_version}.tar.gz
-  cd ncurses-${ncurses_version}
-  ./configure --prefix=$install_path --with-default-terminfo-dir=/usr/share/terminfo --with-terminfo-dirs="/etc/terminfo:/lib/terminfo:/usr/share/terminfo"
-  make -j $concurrency
-  if [[ $? -eq 0 ]]; then
-    make install
-  else
-    exit 3
-  fi
-}
-
 download_source_file() {
   local version=$1
   local download_path=$2
@@ -108,8 +83,6 @@ get_download_url() {
   echo "https://github.com/tmux/tmux/archive/${version}.zip"
 }
 
-# install_libevent $ASDF_INSTALL_PATH $ASDF_CONCURRENCY
-
-install_ncurses $ASDF_INSTALL_PATH $ASDF_CONCURRENCY
+install_libevent $ASDF_INSTALL_PATH $ASDF_CONCURRENCY
 
 install_tmux $ASDF_INSTALL_VERSION $ASDF_INSTALL_PATH $ASDF_CONCURRENCY
