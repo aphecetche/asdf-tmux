@@ -1,5 +1,33 @@
 #!/usr/bin/env bash
 
+construct_configure_options() {
+  load_configure_options
+
+  if [ "$TMUX_CONFIGURE_OPTIONS" = "" ]; then
+    local configure_options="--prefix=$install_path"
+
+    if [ "$TMUX_EXTRA_CONFIGURE_OPTIONS" != "" ]; then
+      configure_options="$configure_options $TMUX_EXTRA_CONFIGURE_OPTIONS"
+    fi
+  else
+    local configure_options="$TMUX_CONFIGURE_OPTIONS --prefix=$install_path"
+  fi
+
+  echo "$configure_options"
+}
+
+load_configure_options() {
+  local asdf_tmux_configure_options="${HOME}/.asdf-tmux-configure-options"
+
+  if [[ ! -r "$asdf_tmux_configure_options" ]]; then
+    return
+  fi
+
+  set -a
+  source "$asdf_tmux_configure_options"
+  set +a
+}
+
 install_tmux() {
   local version=$1
   local install_path=$2
@@ -29,7 +57,7 @@ install_tmux() {
     cd $tmp_download_dir/tmux-${version}
     ./autogen.sh
     install_path=$install_path
-    ./configure --prefix=$install_path CFLAGS="-I${install_path}/include" LDFLAGS="-L${install_path}/lib -Wl,-rpath,$install_path/lib"
+    ./configure $(construct_configure_options) CFLAGS="-I${install_path}/include" LDFLAGS="-L${install_path}/lib -Wl,-rpath,$install_path/lib"
     make -j $concurrency
     if [[ $? -eq 0 ]]; then
       make install
